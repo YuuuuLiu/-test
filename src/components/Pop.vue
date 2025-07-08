@@ -31,7 +31,10 @@ const closePopup = () => {
           </div>
           <select required>
             <option selected>請選擇類別</option>
-            <option>2</option>
+            <option>操作問題</option>
+            <option>優化建議</option>
+            <option>Bug反饋</option>
+            <option>其他</option>
           </select>
         </label>
       </div>
