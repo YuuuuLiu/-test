@@ -6,6 +6,37 @@ const showPop = ref(false)
 const closePopup = () => {
   showPop.value = false
 }
+
+const fileInput = ref(null)
+const images = ref([])
+const hoveredIndex = ref(null)
+const showPreview = ref(false)
+const previewImage = ref('')
+
+const triggerFileInput = () => {
+  fileInput.value.click()
+}
+
+const handleFileChange = (event) => {
+  const file = event.target.files[0]
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      images.value.push(e.target.result)
+    }
+    reader.readAsDataURL(file)
+    event.target.value = ''
+  }
+}
+
+const openPreview = (src) => {
+  previewImage.value = src
+  showPreview.value = true
+}
+
+const removeImage = (index) => {
+  images.value.splice(index, 1)
+}
 </script>
 
 <template>
@@ -54,8 +85,33 @@ const closePopup = () => {
       </div>
       <div class="title">
         <div><span>參考圖片</span><span class="note">（僅支持PNG、JPG格式，每張5MB內）</span></div>
-        <div class="upload-box">
-          <span class="plus-icon">+</span>
+        <div class="upload-container">
+          <!-- 上傳圖片區 -->
+          <div class="upload-box" @click="triggerFileInput">
+            <span class="plus-icon">+</span>
+            <input type="file" ref="fileInput" accept="image/*" @change="handleFileChange" hidden />
+          </div>
+
+          <!-- 圖片預覽區 -->
+          <div class="preview-list">
+            <div
+              v-for="(img, index) in images"
+              :key="index"
+              class="preview-item"
+              @mouseenter="hoveredIndex = index"
+              @mouseleave="hoveredIndex = null"
+            >
+              <img :src="img" class="preview-img" @click="openPreview(img)" />
+              <div v-if="hoveredIndex === index" class="preview-actions">
+                <button @click.stop="removeImage(index)">刪除</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 放大預覽彈窗 -->
+          <div v-if="showPreview" class="overlay" @click="showPreview = false">
+            <img :src="previewImage" class="preview-large" />
+          </div>
         </div>
       </div>
       <div class="note">可提供意見/問題截圖（上傳數量0/3）</div>
@@ -95,7 +151,7 @@ const closePopup = () => {
   padding: 20px;
   border-radius: 8px;
   width: 600px;
-  height: 500px;
+  height: auto;
   max-width: 90%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
@@ -183,5 +239,63 @@ select:invalid {
   padding: 5px;
   cursor: pointer;
   margin: 5px 0;
+}
+.upload-container {
+  padding: 16px;
+}
+
+.upload-box {
+  width: 200px;
+  height: 150px;
+  border: 2px dashed #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.preview-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.preview-item {
+  position: relative;
+}
+
+.preview-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid #ccc;
+}
+
+.preview-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: white;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.preview-large {
+  max-width: 80%;
+  max-height: 80%;
+  box-shadow: 0 0 10px white;
 }
 </style>
